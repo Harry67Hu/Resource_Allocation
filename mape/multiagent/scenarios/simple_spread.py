@@ -1,6 +1,6 @@
 import numpy as np
-from multiagent.core import World, Agent, Landmark
-from multiagent.scenario import BaseScenario
+from mape.multiagent.core import World, Agent, Landmark
+from mape.multiagent.scenario import BaseScenario
 from scipy.optimize import linear_sum_assignment
 
 

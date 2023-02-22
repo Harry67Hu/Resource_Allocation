@@ -1,6 +1,6 @@
 import numpy as np
-from multiagent.environment import MultiAgentEnv
-import multiagent.scenarios as scenarios
+from mape.multiagent.environment import MultiAgentEnv
+import mape.multiagent.scenarios as scenarios
 import gym_vecenv
 
 
