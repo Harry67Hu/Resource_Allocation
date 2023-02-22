@@ -64,7 +64,7 @@ def get_args():
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
-    args.save_dir = '../marlsave/save_new/'+args.save_dir
+    args.save_dir = 'marlsave/save_new/'+args.save_dir
     args.log_dir = args.save_dir + '/' + args.log_dir
 
     if args.continue_training:
