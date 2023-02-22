@@ -1,5 +1,8 @@
 # Learning Transferable Cooperative Behavior in Multi-Agent Teams
 
+## Author HarryHu
+## CASIA
+
 [Akshat Agarwal](https://agakshat.github.io)\*, [Sumit Kumar](https://sumitsk.github.io)\*, [Katia Sycara](http://www.cs.cmu.edu/~sycara/)
 
 Robotics Institute, Carnegie Mellon University
