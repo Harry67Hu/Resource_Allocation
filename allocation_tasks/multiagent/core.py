@@ -19,7 +19,7 @@ class AgentState(EntityState):
             2. 基地内各类载荷剩余数目(可能有）
         '''
 
-        self.num_plane = None # 飞机剩余数目列表，在scenario中进行初始化
+        self.planes = None # 各类飞机挂载剩余数目列表，在scenario中进行初始化
 
 class TargetState(EntityState):
     def __init__(self):
@@ -30,7 +30,7 @@ class TargetState(EntityState):
             2. 目标优先级
         '''
         
-        self.num_requirement = None # 目标需求列表,可以在在scenario中进行初始化,也可以通过type进行加载
+        self.requirements = None # 目标需求列表,可以在在scenario中进行初始化,也可以通过type进行加载
         self.priority = None
 
 
@@ -82,13 +82,16 @@ class Agent(Entity):
             此处定义基地智能体模型的基本属性
             基本状态以外的模型和参数
             1. 基地位置
-            2. 
+            2. 基地能派出飞机的阈值(此处的类型是真飞机种类)
         '''
         # state
         self.state = AgentState()
         # action
         self.action = Action(num_plane_type=num_plane_type, max_num_plane=max_num_plane)
         self.action_callback = None
+        # properties
+        self.index = 0 # 基地智能体的索引
+        self.real_plane_threshold = None# e.g. [36,36,0,0,0]
 
         
 
@@ -103,8 +106,12 @@ class World(object):
 
         self.agents = []
         self.targets = []
+        self.targets_done = [] # 存储每个目标是否被解决的向量,初始全部为0,被解决则为1
+        self.num_is_agent_thres = 0 # 存储到达阈值的基地数目
+
         self.steps = 0
         self.MaxEpisodeStep = 50
+        self.done = False # 整个episode结束
 
     # debug使用
     @property
