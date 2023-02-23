@@ -99,10 +99,10 @@ class Agent(Entity):
 class World(object):
     def __init__(self):
 
-        self.num_requirement_type = 
-        self.num_plane_type =       # 飞机挂载的种类
+        self.num_requirement_type = 0
+        self.num_plane_type = 0      # 飞机挂载的种类
 
-        self.max_num_plane =  # 每个机场每类飞机最大的调用数目
+        self.max_num_plane = 0 # 每个机场每类飞机最大的调用数目
 
         self.agents = []
         self.targets = []
@@ -110,7 +110,7 @@ class World(object):
         self.num_is_agent_thres = 0 # 存储到达阈值的基地数目
 
         self.steps = 0
-        self.MaxEpisodeStep = 50
+        self.max_episode_step = 50
         self.done = False # 整个episode结束
 
     # debug使用

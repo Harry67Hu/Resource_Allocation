@@ -9,10 +9,11 @@ class ScenarioConfig(object):
         场景参数放置于此处
     '''
     # e.g:
-    num_agents = 9
-    num_landmarks = 3
-    dist_threshold = 0.1
-    arena_size = 1
+    num_agents = 5
+    max_episode_step = 500
+    num_requirement_type = 7
+    num_plane_type = 12
+    max_num_plane = 90
 
 class Scenario(BaseScenario):
     def __init__(self, num_agents=4, dist_threshold=0.1, arena_size=1, identity_size=0, process_id=-1):
@@ -25,18 +26,20 @@ class Scenario(BaseScenario):
     def make_world(self):
         world = World()
         # 设置场景基本参数 e.g:
-        world.dim_c = 2
-        world.collaborative = False
+        world.max_episode_step = ScenarioConfig.max_episode_step
+        world.num_requirement_type = ScenarioConfig.num_requirement_type
+        world.num_plane_type = ScenarioConfig.num_plane_type
+        world.max_num_plane = ScenarioConfig.max_num_plane
         
-        # 定义基地智能体并赋予属性
-        world.agents = [Agent(iden=i) for i in range(num_agents)]
+        # 定义基地智能体并赋予属性 
+        world.agents = [Agent(iden=i) for i in range(self.num_agents)]
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
         
-        # 定义目标虚拟实体并赋予属性
-        world.landmarks = [Landmark() for i in range(num_landmarks)]
-        for i, landmark in enumerate(world.landmarks):
-            landmark.name = 'landmark %d' % i
+        # 定义目标虚拟实体并赋予属性[因为目标数目不定，定义放到了reset_world函数中]
+        # world.landmarks = [Landmark() for i in range(num_landmarks)]
+        # for i, landmark in enumerate(world.landmarks):
+        #     landmark.name = 'landmark %d' % i
 
 
         self.reset_world(world)
@@ -46,6 +49,7 @@ class Scenario(BaseScenario):
     def reset_world(self, world):
         # 重置场景状态
         world.steps = 0
+        world.done = False
 
 
     def reward(self, agent, world):
