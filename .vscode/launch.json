@@ -1,0 +1,28 @@
+{
+ 
+    "version": "0.2.0",
+    "configurations": [
+    
+        {
+            "name": "Hmp: Current Json",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",   // ${file}
+            "args": [
+                "-c",
+                "${file}",
+                "--skip"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
