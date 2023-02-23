@@ -1,6 +1,4 @@
 import numpy as np
-# Just have a try
-# 看看是否有效呢？
 class Knowledge():
     def __init__(self, num_requirement_type, num_plane_type):
         '''
