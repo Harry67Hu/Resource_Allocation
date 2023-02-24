@@ -1,8 +1,9 @@
 import numpy as np
-from multiagent.core import World, Agent, Landmark
+import random
+from multiagent.core import World, Agent, Target
 from multiagent.scenario import BaseScenario
 from scipy.optimize import linear_sum_assignment
-
+from multiagent.basic_knowledge import Knowledge
 
 class ScenarioConfig(object):  
     '''
@@ -14,6 +15,7 @@ class ScenarioConfig(object):
     num_requirement_type = 7
     num_plane_type = 12
     max_num_plane = 90
+    num_target_type = 6
 
 class Scenario(BaseScenario):
     def __init__(self, num_agents=4, dist_threshold=0.1, arena_size=1, identity_size=0, process_id=-1):
@@ -30,11 +32,16 @@ class Scenario(BaseScenario):
         world.num_requirement_type = ScenarioConfig.num_requirement_type
         world.num_plane_type = ScenarioConfig.num_plane_type
         world.max_num_plane = ScenarioConfig.max_num_plane
+
+        Knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
         
         # 定义基地智能体并赋予属性 
-        world.agents = [Agent(iden=i) for i in range(self.num_agents)]
+        world.agents = [Agent(num_plane_type=ScenarioConfig.num_plane_type, max_num_plane=ScenarioConfig.max_num_plane) for i in range(self.num_agents)]
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
+            agent.index = i
+            agent.state.planes = Knowledge.get_agent_plane()[i]
+            agent.real_plane_threshold = Hwo2Define?
         
         # 定义目标虚拟实体并赋予属性[因为目标数目不定，定义放到了reset_world函数中]
         # world.landmarks = [Landmark() for i in range(num_landmarks)]
@@ -50,6 +57,28 @@ class Scenario(BaseScenario):
         # 重置场景状态
         world.steps = 0
         world.done = False
+
+        # 生成可行目标(可行解)
+        a_int = random.randint(1, 29) # 第一个维度 a<30
+        d_int = random.randint(1, 47) # 第二个维度 d<48
+        e_int = random.randint(1, 41) # 第三个维度 e<42
+
+
+        for i in range(2*a_int):
+            world.targets.append(Target)
+            world.targets.type = 0
+            world.targets.state.requirements = Knowledge.get_target_requirement()[0]
+        for i in range(60 - 2*a_int):
+            world.targets.append(Target)
+            world.targets.type = 1
+            world.targets.state.requirements = Knowledge.get_target_requirement()[1]
+        for i in range(2*e_int):
+            world.targets.append(Target)
+            world.targets.type = 2
+            world.targets.state.requirements = Knowledge.get_target_requirement()[2]
+
+
+
 
 
     def reward(self, agent, world):

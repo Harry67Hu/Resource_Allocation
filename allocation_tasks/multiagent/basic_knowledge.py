@@ -1,12 +1,13 @@
 import numpy as np
 class Knowledge():
-    def __init__(self, num_requirement_type, num_plane_type):
+    def __init__(self, num_requirement_type, num_plane_type, num_target_type):
         '''
             此处代码用来存储场景中的已知信息
             TO 李东珉, 需要运行这个里面的main以检测各知识的构造是否正确
         '''
         self.num_requirement_type = num_requirement_type # 有几类需求飞机能力向量和目标需求向量的维度就是几维
         self.num_plane_type = num_plane_type # 这里是飞机挂载的类型而非飞机类型
+        self.num_target_type = num_target_type
         self.plane_type = {}
 
         # A. 存储每类飞机挂载选择的能力向量
@@ -51,6 +52,7 @@ class Knowledge():
 
         ])
         assert self.TARGET_REQUIREMENT.shape[-1] == self.num_requirement_type, ("TARGET_REQUIREMENT 的格式有问题！")
+        assert self.TARGET_REQUIREMENT.shape[-2] == self.num_target_type, ("TARGET_REQUIREMENT 的格式有问题！")
 
         # D. 存储每个基地智能体的飞机种类（此处为实际挂载种类）
         self.AGENT_PLANE = np.array([

@@ -76,7 +76,7 @@ class Target(Entity):
         self.type = 0 # 目标种类
 
 class Agent(Entity):
-    def __init__(self, iden=None, num_plane_type, max_num_plane):
+    def __init__(self, num_plane_type=0, max_num_plane=0):
         super(Agent, self).__init__()
         '''
             此处定义基地智能体模型的基本属性
@@ -91,7 +91,7 @@ class Agent(Entity):
         self.action_callback = None
         # properties
         self.index = 0 # 基地智能体的索引
-        self.real_plane_threshold = None# e.g. [36,36,0,0,0]
+        self.real_plane_threshold = None # e.g. [36,36,0,0,0]
 
         
 
