@@ -17,7 +17,9 @@ class ScenarioConfig(object):
     max_num_plane = 4
     num_target_type = 6
 
-    plane_cost = np.ones(num_plane_type) * 1 # 每个飞机的成本，暂定
+    plane_cost = np.ones(num_plane_type) * 0.2 # 每个飞机的成本，暂定
+    single_target_reward = 1  # 完成每个target后给的奖励，待定
+    total_reward = 500 # episode结束后得到的大的稀疏奖励，待定
 
 class Scenario(BaseScenario):
     def __init__(self, num_agents=4, dist_threshold=0.1, arena_size=1, identity_size=0, process_id=-1):
@@ -108,30 +110,23 @@ class Scenario(BaseScenario):
         world.focus_time = 0
 
 
-
-
-
     def reward(self, agent, world):
         '''
             智能体的奖励, 需要区分全体奖励和个体奖励
-            1. 每一步所有智能体的资源贡献使得当前步的目标需求被解决，得到奖励
-            2. episode结束的时候根据所有目标的毁伤情况给一个奖励
-            3. episode结束的时候给所有智能体给予一定的成本惩罚(整体)
+            1. 当focus目标的需求被解决或者到达临时时间步后,给予奖励和成本惩罚
+            2. 当episode结束后,全体智能体得到一个共同的奖励和成本惩罚
         '''
         joint_reward = 0
         if world.done:
-            joint_reward = joint_reward + 50 if np.all(world.targets_done == 1) else joint_reward + 0
-            joint_reward -= world.cost
+            done_partial = np.sum(world.targes_done) / len(world.targets_done)
+            joint_reward += done_partial * ScenarioConfig.total_reward
+            joint_reward -= world.total_cost
+            return joint_reward
         else:
-            main_target = world.targets[world.steps]
-            requirements = main_target.state.requirements
-            if np.all(requirements == 0):
-                print("目标{}的需求被解决".format(world.steps))
-                joint_reward += 1
-
-        return joint_reward
-        return single_reward
-    
+            if world.single_reward > 0:
+                print("有效输出了一个小奖励！调试成功！")
+            single_reward = world.single_reward * ScenarioConfig.single_target_reward
+            return single_reward
     
     
     def observation(self, agent, world):

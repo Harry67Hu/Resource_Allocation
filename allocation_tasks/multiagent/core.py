@@ -153,7 +153,8 @@ class World(object):
         self.targets_type_remain = np.zeros(self.num_target_type) # 剩余各种类目标的数目，仅观测使用
 
         self.total_cost = 0 # 所有资源对应的成本，供episode结束使用，仅奖励使用
-        self.singel_cost = 0 # 当前为解决focus目标所有资源对应的成本，仅奖励使用
+        self.single_cost = 0 # 当前为解决focus目标所有资源对应的成本，仅奖励使用
+        self.single_reward = 0 # 当前为解决focus目标给予的奖励，仅奖励使用
 
 
     # debug使用
@@ -181,6 +182,7 @@ class World(object):
             2. 作战效益模型【暂时没加进去】
             在此版本的状态转移模型中, 每一步只对特定的目标作用【初始版本里面是随机选择一个目标作用】
         '''
+        self.single_reward = 0
         # set actions for scripted agents 
         for agent in self.scripted_agents:
             agent.action = agent.action_callback(agent, self)
@@ -212,13 +214,17 @@ class World(object):
             self.is_focus_done = True
             self.targets_done[self.target_focus_on] = 1
             self.targets_type_remain[tar.type] -= 1 
+            self.single_reward = 1
+            print("目标{}的需求被解决".format(tar.index))
+            print("该目标更新后的需求为{}".format(tar.state.requirements))
+
          # 对focus目标做更新 TODO 在世界定义的时候需要先更新focus
         if self.is_focus_done or self.focus_time >= self.num_plane_type - 1:
             self.target_focus_on = sample(self.target_index_list, k=1) # 随机选取一个target
             self.target_index_list.pop(self.target_focus_on)
             self.is_focus_done = False
             self.focus_time = 0
-            self.singel_cost = 0
+            self.single_cost = 0
     
     def calculate_cost(self):
         '''
@@ -227,7 +233,7 @@ class World(object):
         for i, agent in enumerate(self.agents):
             real_act = agent.action.act2real
             temp_cost = np.sum(real_act * ScenarioConfig.plane_cost)
-            self.singel_cost += temp_cost
+            self.single_cost += temp_cost
             self.total_cost += temp_cost
 
     
