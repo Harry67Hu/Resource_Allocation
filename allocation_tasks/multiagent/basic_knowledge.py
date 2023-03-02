@@ -13,13 +13,17 @@ class Knowledge():
         # A. 存储每类飞机挂载选择的能力向量
         self.PLANE_CAPACITY = np.array([
             [0,4,0,0,0,0,0], # e.g.第一类飞机挂载种类
-
-
-
-
-
-
-
+            [4,0,0,0,0,0,0], 
+            [0,0,2,0,0,0,0], 
+            [0,0,0,0,2,0,0], 
+            [0,0,0,4,0,0,0],
+            [0,0,0,0,0,4,0],
+            [0,0,0,0,2,0,0],
+            [0,0,0,2,0,0,0],
+            [0,0,0,0,0,6,0],
+            [0,0,0,0,0,0,4],
+            [0,0,0,4,0,0,0],
+            [0,0,0,0,0,0,2],
         ])
         assert  self.PLANE_CAPACITY.shape[-1] == self.num_requirement_type, ("PLANE_CAPACITY 的格式有问题！")
         assert  self.PLANE_CAPACITY.shape[-2] == self.num_plane_type, ("PLANE_CAPACITY 的格式有问题！")
@@ -44,11 +48,11 @@ class Knowledge():
         # C. 存储每类子目标的需求向量
         self.TARGET_REQUIREMENT = np.array([
             [4,4,0,0,0,0,0], # e.g. 第一类目标需求种类
-
-
-
-
-
+            [0,0,2,0,0,0,0], 
+            [0,0,0,2,0,0,2], 
+            [0,0,0,4,6,0,0], 
+            [0,0,0,0,0,6,2], 
+            [0,0,0,4,0,4,0], 
 
         ])
         assert self.TARGET_REQUIREMENT.shape[-1] == self.num_requirement_type, ("TARGET_REQUIREMENT 的格式有问题！")
@@ -57,12 +61,13 @@ class Knowledge():
         # D. 存储每个基地智能体的飞机种类（此处为实际挂载种类）
         self.AGENT_PLANE = np.array([
             [36,36,36,36,36,36,0,0,0,0,0,0],  # e.g. 机场1中有实际飞机类型1和2，对应了6种挂载类型      
-
-
-
+            [0,0,0,36,36,36,0,0,0,0,0,24],    
+            [0,0,0,36,36,36,48,48,48,48,0,36],
+            [24,24,24,36,36,36,48,48,48,48,24,0],
+            [0,0,0,0,0,0,0,0,0,0,24,24], 
 
         ])
-        assert self.AGENT_PLANE.shape[-1] == self.num_requirement_type, ("AGENT_PLANE 的格式有问题！")
+        assert self.AGENT_PLANE.shape[-1] == self.num_plane_type, ("AGENT_PLANE 的格式有问题！")
         
         # E. 存储每个基地智能体可调用的飞机阈值（此处为真飞机种类）
         self.AGENT_THRES = np.array([
@@ -103,10 +108,11 @@ class Knowledge():
 
 
 if __name__ == '__main__':
-    TEMP = Knowledge(num_requirement_type=7, num_plane_type=12)
+    TEMP = Knowledge(num_requirement_type=7, num_plane_type=12, num_target_type=6)
     test = TEMP.get_plane_capacity()
     test = TEMP.get_plane_type()
-    test = TEMP.get_target_capacity()
+    test = TEMP.get_target_requirement()
     test = TEMP.get_agent_plane()
+    test = TEMP.get_agent_thres()
 
  

@@ -43,12 +43,14 @@ class MultiAgentEnv(gym.Env):
         self.observation_space = []
         for agent in self.agents:
             total_action_space = []
-            # physical action space
-            if self.discrete_action_space:
-                u_action_space = spaces.Discrete(world.dim_p * 2 + 1)
-            else:
-                u_action_space = spaces.Box(low=-agent.u_range, high=+agent.u_range, shape=(world.dim_p,), dtype=np.float32)
-            if agent.movable:
+            # 定义动作空间
+            assert self.discrete_action_space
+            # if self.discrete_action_space:
+            #     u_action_space = spaces.Discrete(world.dim_p * 2 + 1)
+            # else:
+            #     u_action_space = spaces.Box(low=-agent.u_range, high=+agent.u_range, shape=(world.dim_p,), dtype=np.float32)
+            # if agent.movable:
+            
                 total_action_space.append(u_action_space)
             # total action space
             if len(total_action_space) > 1:
