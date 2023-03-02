@@ -64,7 +64,15 @@ class Knowledge():
         ])
         assert self.AGENT_PLANE.shape[-1] == self.num_requirement_type, ("AGENT_PLANE 的格式有问题！")
         
-    
+        # E. 存储每个基地智能体可调用的飞机阈值（此处为真飞机种类）
+        self.AGENT_THRES = np.array([
+            [20,20,0,0,0],  # e.g. 机场1实际有[36,36,0,0,0]的真飞机，能调用的上限为[20,20,0,0,0]  
+            [0,20,0,0,18],  
+            [0,20,36,0,20],
+            [18,20,36,18,0],
+            [0,0,0,18,18],  
+        ])
+        assert self.AGENT_THRES.shape[-1] > 0 , ("AGENT_THRES 的格式有问题！")
 
     def get_plane_capacity(self):
         '''
@@ -86,6 +94,11 @@ class Knowledge():
             存储每个基地智能体的飞机种类
         '''
         return self.AGENT_PLANE
+    def get_agent_thres(self):
+        '''
+            存储每个基地智能体可调用的飞机阈值
+        '''
+        return self.AGENT_THRES
 
 
 
