@@ -8,8 +8,7 @@ from utils import make_multiagent_env
 
 def setup_master(args, env=None, return_env=False):
     if env is None:
-        env = make_multiagent_env(args.env_name, num_agents=args.num_agents, dist_threshold=args.dist_threshold, 
-                                  arena_size=args.arena_size, identity_size=args.identity_size)
+        env = make_multiagent_env(args.env_name, num_agents=args.num_agents)
     policy1 = None
     policy2 = None
     team1 = []
@@ -32,6 +31,8 @@ def setup_master(args, env=None, return_env=False):
         num_entities = 1
     elif args.env_name == 'simple_line':
         num_entities = 2
+    elif args.env_name == 'resource_allocation_v1':
+        pass
     else:
         raise NotImplementedError('Unknown environment, define entity_mp for this!')
 

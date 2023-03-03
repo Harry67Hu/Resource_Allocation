@@ -1,9 +1,25 @@
 import numpy as np
+
+class ScenarioConfig(object):  
+    '''
+        场景参数放置于此处
+    '''
+    
+    num_agents = 5
+    max_episode_step = 500
+    num_requirement_type = 7
+    num_plane_type = 12
+    max_num_plane = 4
+    num_target_type = 6
+
+    plane_cost = np.ones(num_plane_type) * 0.2 # 每个飞机的成本，暂定
+    single_target_reward = 1  # 完成每个target后给的奖励，待定
+    total_reward = 500 # episode结束后得到的大的稀疏奖励，待定
+
 class Knowledge():
     def __init__(self, num_requirement_type, num_plane_type, num_target_type):
         '''
             此处代码用来存储场景中的已知信息
-            TO 李东珉, 需要运行这个里面的main以检测各知识的构造是否正确
         '''
         self.num_requirement_type = num_requirement_type # 有几类需求飞机能力向量和目标需求向量的维度就是几维
         self.num_plane_type = num_plane_type # 这里是飞机挂载的类型而非飞机类型

@@ -1,7 +1,6 @@
 import numpy as np
-from .basic_knowledge import Knowledge
 from random import sample
-from .scenarios.resource_allocation_v1 import ScenarioConfig
+from .basic_knowledge import Knowledge, ScenarioConfig
 # State
 class EntityState(object):
     def __init__(self):
@@ -37,14 +36,14 @@ class TargetState(EntityState):
 
 # Action 
 class Action(object):
-    def __init__(self, num_plane_type=12, max_num_plane=4, num_reqirement_type=7):
+    def __init__(self, num_plane_type=12, max_num_plane=4, num_requirement_type=7):
         '''
             此处定义基地智能体的动作
             使用样例 e.g : state[t+1] = state[t] + agent.action.example 
             【方案一】在这个方案里面, 每个action在一步中只对一个目标产生作用
             
             0. 如果智能体在一步内对某个目标进行决策，则其离散动作数目为 (max_num_plane + 1)^num_plane_type 这是不可接受的！
-            TODO ？ 半马尔科夫模型？？？ 【即智能体在多步对一个目标决策后，目标的状态才进行变化？？】
+            TODO  半马尔科夫模型？？？ 【即智能体在多步对一个目标决策后，目标的状态才进行变化？？】
             1. 智能体的动作为选定特定类型的飞机并决定多少架 + 空动作 num_plane_type * (max_num_plane + 1) + 1空动作
             2. 分配资源的形式为 len = num_plane_type  e.g. 0号动作为 real_act = [0,0,0,0,0,0,0,0,0,0,0,0]   act act = 29号动作为 real_act = [2,0,0,0,0,0,0,0,0,0,0,0] 30号动作为[3,0,0,0,0,0,0,0,0,0,0,0]
             3. 对智能体的影响为 agent_state -= real_act
@@ -52,7 +51,7 @@ class Action(object):
         '''
         self.num_plane_type = num_plane_type
         self.max_num_plane = max_num_plane
-        self.num_reqirement_type = num_reqirement_type
+        self.num_requirement_type = num_requirement_type
         self.act = None # 智能体的动作,为一个数,此为强化学习中真正使用的动作！
 
     # 此处将数字act转译为真实act
@@ -68,9 +67,9 @@ class Action(object):
     # 此处将数字act转译为分配出来的载荷
     def act2source(self):
         real_act = self.act2real()
-        Knowledge = Knowledge(num_requirement_type=self.num_requirement_type, num_plane_type=self.num_plane_type, num_target_type=self.num_target_type)
-        PLANE_CAPACITY = Knowledge.get_plane_capacity()
-        resource_output = np.zeros(self.num_reqirement_type, dtype=int)
+        knowledge = Knowledge(num_requirement_type=self.num_requirement_type, num_plane_type=self.num_plane_type, num_target_type=self.num_target_type)
+        PLANE_CAPACITY = knowledge.get_plane_capacity()
+        resource_output = np.zeros(self.num_requirement_type, dtype=int)
         for i, num in enumerate(real_act):
             resource_output += num * PLANE_CAPACITY[i]
         return resource_output
@@ -107,7 +106,7 @@ class Target(Entity):
         self.index = 0
 
 class Agent(Entity):
-    def __init__(self, num_plane_type=0, max_num_plane=0, num_target_type=0):
+    def __init__(self, num_plane_type=0, max_num_plane=0, num_requirement_type=0):
         super(Agent, self).__init__()
         '''
             此处定义基地智能体模型的基本属性
@@ -118,7 +117,7 @@ class Agent(Entity):
         # state
         self.state = AgentState()
         # action
-        self.action = Action(num_plane_type=num_plane_type, max_num_plane=max_num_plane, num_target_type=num_target_type)
+        self.action = Action(num_plane_type=num_plane_type, max_num_plane=max_num_plane, num_requirement_type=num_requirement_type)
         self.action_callback = None
         # properties
         self.index = 0 # 基地智能体的索引
@@ -156,7 +155,7 @@ class World(object):
         self.single_cost = 0 # 当前为解决focus目标所有资源对应的成本，仅奖励使用
         self.single_reward = 0 # 当前为解决focus目标给予的奖励，仅奖励使用
 
-
+        self.collaborative = True
     # debug使用
     @property
     def entities(self):
@@ -194,14 +193,14 @@ class World(object):
         self.steps += 1
 
     def integrate_state(self):
-        Knowledge = Knowledge(num_requirement_type=self.num_requirement_type, num_plane_type=self.num_plane_type, num_target_type=self.num_target_type)
+        knowledge = Knowledge(num_requirement_type=self.num_requirement_type, num_plane_type=self.num_plane_type, num_target_type=self.num_target_type)
             
         # 加载智能体动作对基地的影响(对基地智能体中的实际飞机数目有影响)
         for i, agent in enumerate(self.agents):
             real_act = agent.action.act2real
             for j, plane_num in enumerate(real_act):
                 if plane_num > 0:
-                    real_index = Knowledge.get_plane_type()[j]
+                    real_index = knowledge.get_plane_type()[j]
                     agent.state.real_planes[real_index] -= plane_num 
         # 加载智能体动作对目标的影响
         for i, agent in enumerate(self.agents):
@@ -220,8 +219,9 @@ class World(object):
 
          # 对focus目标做更新 TODO 在世界定义的时候需要先更新focus
         if self.is_focus_done or self.focus_time >= self.num_plane_type - 1:
-            self.target_focus_on = sample(self.target_index_list, k=1) # 随机选取一个target
-            self.target_index_list.pop(self.target_focus_on)
+            idx = np.random.choice(len(self.target_index_list))
+            self.target_focus_on = self.target_index_list[idx] # 随机选取一个target
+            self.target_index_list = np.delete(self.target_index_list, idx)
             self.is_focus_done = False
             self.focus_time = 0
             self.single_cost = 0

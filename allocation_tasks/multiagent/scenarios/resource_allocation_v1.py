@@ -1,33 +1,16 @@
 import numpy as np
 import random
-from multiagent.core import World, Agent, Target
-from multiagent.scenario import BaseScenario
+from allocation_tasks.multiagent.core import World, Agent, Target
+from allocation_tasks.multiagent.scenario import BaseScenario
 from scipy.optimize import linear_sum_assignment
-from multiagent.basic_knowledge import Knowledge
+from allocation_tasks.multiagent.basic_knowledge import Knowledge, ScenarioConfig
 
-class ScenarioConfig(object):  
-    '''
-        场景参数放置于此处
-    '''
-    
-    num_agents = 5
-    max_episode_step = 500
-    num_requirement_type = 7
-    num_plane_type = 12
-    max_num_plane = 4
-    num_target_type = 6
-
-    plane_cost = np.ones(num_plane_type) * 0.2 # 每个飞机的成本，暂定
-    single_target_reward = 1  # 完成每个target后给的奖励，待定
-    total_reward = 500 # episode结束后得到的大的稀疏奖励，待定
 
 class Scenario(BaseScenario):
     def __init__(self, num_agents=4, dist_threshold=0.1, arena_size=1, identity_size=0, process_id=-1):
-        # e.g:
+
         self.num_agents = ScenarioConfig.num_agents
-        self.num_landmarks = ScenarioConfig.num_landmarks
-        self.arena_size = ScenarioConfig.arena_size
-        self.dist_thres = ScenarioConfig.dist_threshold
+        self.knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
 
     def make_world(self):
         world = World()
@@ -38,15 +21,14 @@ class Scenario(BaseScenario):
         world.num_target_type = ScenarioConfig.num_target_type
         world.max_num_plane = ScenarioConfig.max_num_plane
 
-        Knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
         
         # 定义基地智能体并赋予属性 
-        world.agents = [Agent(num_plane_type=ScenarioConfig.num_plane_type, max_num_plane=ScenarioConfig.max_num_plane) for i in range(self.num_agents)]
+        world.agents = [Agent(num_plane_type=ScenarioConfig.num_plane_type, max_num_plane=ScenarioConfig.max_num_plane, num_requirement_type=ScenarioConfig.num_requirement_type) for i in range(self.num_agents)]
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
             agent.index = i
-            agent.state.planes = Knowledge.get_agent_plane()[i]
-            agent.real_plane_threshold = Knowledge.get_agent_thres()[i]
+            agent.state.real_planes = self.knowledge.get_agent_plane()[i]
+            agent.real_plane_threshold = self.knowledge.get_agent_thres()[i]
         
         # 定义目标虚拟实体并赋予属性[因为目标数目不定，定义放到了reset_world函数中]
 
@@ -63,8 +45,8 @@ class Scenario(BaseScenario):
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
             agent.index = i
-            agent.state.planes = Knowledge.get_agent_plane()[i]
-            agent.real_plane_threshold = Knowledge.get_agent_thres()[i]
+            agent.state.planes = self.knowledge.get_agent_plane()[i]
+            agent.real_plane_threshold = self.knowledge.get_agent_thres()[i]
 
         # 生成可行目标(可行解)
         a_int = random.randint(10, 29) # 第一个维度 a<30
@@ -73,39 +55,46 @@ class Scenario(BaseScenario):
         # a_int = random.randint(1, 29) # 第一个维度 a<30
         # d_int = random.randint(1, 47) # 第二个维度 d<48
         # e_int = random.randint(1, 41) # 第三个维度 e<42
+        target_index = 0
+        world.targets = [Target() for i in range(60 + 2*84 + 2*48 + 2*d_int)]
         for i in range(2*a_int):
-            world.targets.append(Target)
-            world.targets.type = 0
-            world.targets.state.requirements = Knowledge.get_target_requirement()[0]
+            world.targets[target_index].type = 0
+            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[0]
+            target_index += 1
         for i in range(60 - 2*a_int):
-            world.targets.append(Target)
-            world.targets.type = 1
-            world.targets.state.requirements = Knowledge.get_target_requirement()[1]
+            world.targets[target_index].type = 1
+            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[1]
+            target_index += 1
         for i in range(2*e_int):
-            world.targets.append(Target)
-            world.targets.type = 2
-            world.targets.state.requirements = Knowledge.get_target_requirement()[2]
+            world.targets[target_index].type = 2
+            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[2]
+            target_index += 1
         for i in range(d_int + 3*d_int):
-            world.targets.append(Target)
-            world.targets.type = 3
-            world.targets.state.requirements = Knowledge.get_target_requirement()[3]
+            world.targets[target_index].type = 3
+            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[3]
+            target_index += 1
         for i in range(2*(84-e_int)):
-            world.targets.append(Target)
-            world.targets.type = 4
-            world.targets.state.requirements = Knowledge.get_target_requirement()[4]
+            world.targets[target_index].type = 4
+            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[4]
+            target_index += 1
         for i in range(2*(48-d_int)):
-            world.targets.append(Target)
-            world.targets.type = 5
-            world.targets.state.requirements = Knowledge.get_target_requirement()[5]
+            world.targets[target_index].type = 5
+            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[5]
+            target_index += 1
 
         # 生成目标后对目标相关的量进行重置
+        world.targets_type_remain = np.zeros(world.num_target_type)
         for i, target in enumerate(world.targets):
             target.index = i
             world.targets_type_remain[target.type] += 1
         world.max_episode_step = len(world.targets) * world.num_plane_type
         world.targets_done = np.zeros_like(world.targets,dtype=int)
         world.target_index_list = np.array([i for i,_ in enumerate(world.targets)])
-        world.target_focus_on = random.sample(world.target_index_list, k=1)
+
+        
+        idx = np.random.choice(len(world.target_index_list))
+        world.target_focus_on = world.target_index_list[idx]
+        world.target_index_list = np.delete(world.target_index_list, idx)
         world.is_focus_done = False
         world.focus_time = 0
 
@@ -150,16 +139,16 @@ class Scenario(BaseScenario):
         # part2
         for ag in world.agents: 
             if ag.index != agent.index:
-                total_obs = np.concatenate(total_obs, ag.state.real_planes)
+                total_obs = np.concatenate([total_obs, ag.state.real_planes])
         # part3 
         focus_target = world.targets[world.target_focus_on]
         type_code = np.zeros(world.num_target_type)
         type_code[focus_target.type] = 1
-        total_obs = np.concatenate(total_obs, type_code)
+        total_obs = np.concatenate([total_obs, type_code])
         # part4 
-        total_obs = np.concatenate(total_obs, world.targets_type_remain)
+        total_obs = np.concatenate([total_obs, world.targets_type_remain])
         # part5
-        total_obs = np.concatenate(total_obs, focus_target.state.requirements)
+        total_obs = np.concatenate([total_obs, focus_target.state.requirements])
 
         return total_obs
 

@@ -9,8 +9,9 @@ def get_args():
     parser = argparse.ArgumentParser(description='RL')
     
     # environment
-    parser.add_argument('--env-name', default='simple_spread', help='one from {simple_spread, simple_formation, simple_line})')
-    parser.add_argument('--num-agents', type=int, default=3)
+    parser.add_argument('--env-name', default='resource_allocation_v1', help='one from {simple_spread, simple_formation, simple_line})')
+    # parser.add_argument('--env-name', default='simple_formation', help='one from {simple_spread, simple_formation, simple_line})')
+    parser.add_argument('--num-agents', type=int, default=5)
     parser.add_argument('--masking', action='store_true', help='restrict communication to within some threshold')
     parser.add_argument('--mask-dist', type=float, default=1.0, help='distance to restrict comms')
     parser.add_argument('--dropout-masking', action='store_true', help='dropout masking enabled')
@@ -23,7 +24,7 @@ def get_args():
     parser.add_argument('--num-steps', type=int, default=128, help='number of forward steps in PPO (default: 128)')
     parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
     parser.add_argument('--num-frames', type=int, default=int(50e6), help='number of frames to train (default: 50e6)')
-    parser.add_argument('--arena-size', type=int, default=1, help='size of arena')
+    # parser.add_argument('--arena-size', type=int, default=1, help='size of arena')
 
     # evaluation
     parser.add_argument('--num-eval-episodes', type=int, default=30, help='number of episodes to evaluate with')
@@ -50,7 +51,7 @@ def get_args():
     parser.add_argument('--log-interval', type=int, default=10, help='log interval, one log per n updates (default: 10)')
     
     # Miscellaneous
-    parser.add_argument('--test', action='store_true')
+    parser.add_argument('--test', default=True, action='store_true')
     parser.add_argument('--load-dir', default=None, help='filename to load all policies from')
     parser.add_argument('--eval-interval', default=50, type=int)
     parser.add_argument('--continue-training', action='store_true')

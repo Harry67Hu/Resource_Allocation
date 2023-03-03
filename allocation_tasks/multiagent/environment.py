@@ -2,7 +2,7 @@ import gym
 from gym import spaces
 from gym.envs.registration import EnvSpec
 import numpy as np
-from multiagent.multi_discrete import MultiDiscrete
+from .multi_discrete import MultiDiscrete
 
 
 # environment for all agents in the multiagent world
@@ -37,6 +37,7 @@ class MultiAgentEnv(gym.Env):
         # if true, every agent has the same reward
         self.shared_reward = world.collaborative if hasattr(world, 'collaborative') else False
         self.time = 0
+        self.seed()
 
         # configure spaces
         self.action_space = []
@@ -44,14 +45,13 @@ class MultiAgentEnv(gym.Env):
         for agent in self.agents:
             total_action_space = []
             # 定义动作空间
-            assert self.discrete_action_space
+            assert self.discrete_action_space, ('应该设置为离散动作！')
             # if self.discrete_action_space:
             #     u_action_space = spaces.Discrete(world.dim_p * 2 + 1)
             # else:
             #     u_action_space = spaces.Box(low=-agent.u_range, high=+agent.u_range, shape=(world.dim_p,), dtype=np.float32)
             # if agent.movable:
-            
-                total_action_space.append(u_action_space)
+            total_action_space.append(spaces.Discrete(world.max_num_plane * world.num_plane_type + 1))
             # total action space
             if len(total_action_space) > 1:
                 # all action spaces are discrete, so simplify to MultiDiscrete action space
@@ -62,8 +62,9 @@ class MultiAgentEnv(gym.Env):
                 self.action_space.append(act_space)
             else:
                 self.action_space.append(total_action_space[0])
-            # self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(obs_dim,), dtype=np.float32))
-            agent.action.c = np.zeros(self.world.dim_c)
+                
+            obs_dim = len(observation_callback(agent, self.world))
+            self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(obs_dim,), dtype=np.float32))
 
         # rendering self.agents[0].state.p_pos
         self.cam_range = cam_range
@@ -77,6 +78,9 @@ class MultiAgentEnv(gym.Env):
     @property
     def episode_limit(self):
         return self.world.MaxEpisodeStep
+    
+    def seed(self, seed=None):
+        np.random.seed(seed)
 
     def step(self, action_n):
         obs_n = []
@@ -89,9 +93,9 @@ class MultiAgentEnv(gym.Env):
             self._set_action(action_n[i], agent, self.action_space[i])
         # advance world state
         self.world.step()
-        # 对几百个智能体都计算观测量把cpu怼爆了，需要修改
-        obs_n.append(self._get_obs())
+        
         for agent in self.agents:
+            obs_n.append(self._get_obs(agent))
             reward_n.append(self._get_reward(agent))
             done_n.append(self._get_done(agent))
             info_n['n'].append(self._get_info(agent))
@@ -111,9 +115,9 @@ class MultiAgentEnv(gym.Env):
         # record observations for each agent
         obs_n = []
         self.agents = self.world.policy_agents
-        # for agent in self.agents:
-        obs_n.append(self._get_obs())
-        return np.array(obs_n)
+        for agent in self.agents:
+            obs_n.append(self._get_obs(agent))
+        return obs_n
 
     # get info used for benchmarking
     def _get_info(self, agent):
@@ -142,62 +146,8 @@ class MultiAgentEnv(gym.Env):
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
-        agent.action.u = np.zeros(self.world.dim_p)
-        agent.action.c = np.zeros(self.world.dim_c)
-        # process action
-        if isinstance(action_space, MultiDiscrete):
-            act = []
-            size = action_space.high - action_space.low + 1
-            index = 0
-            for s in size:
-                act.append(action[index:(index+s)])
-                index += s
-            action = act
-        else:
-            action = [action]
-
-        if agent.movable:
-            # physical action
-            if self.discrete_action_input:
-                agent.action.u = np.zeros(self.world.dim_p)
-                # process discrete action
-                n_dir = 4
-                dir_div = np.pi*2/n_dir
-                if action[0] == 0:
-                    pass
-                else:
-                    i = action[0] - 1
-                    agent.action.u[0] = np.cos( i*dir_div)
-                    agent.action.u[1] = np.sin( i*dir_div)
-
-            else:
-                if self.force_discrete_action:
-                    d = np.argmax(action[0])
-                    action[0][:] = 0.0
-                    action[0][d] = 1.0
-                if self.discrete_action_space:
-                    agent.action.u[0] += action[0][1] - action[0][2]
-                    agent.action.u[1] += action[0][3] - action[0][4]
-                else:
-                    agent.action.u = action[0]
-            sensitivity = 5.0
-            if agent.accel is not None:
-                sensitivity = agent.accel
-            agent.action.u *= sensitivity
-            action = action[1:]
-        else:
-            agent.action.u = np.zeros(self.world.dim_p)
-            action = action[1:]
-        if not agent.silent:
-            # communication action
-            if self.discrete_action_input:
-                agent.action.c = np.zeros(self.world.dim_c)
-                agent.action.c[action[0]] = 1.0
-            else:
-                agent.action.c = action[0]
-            action = action[1:]
-        # make sure we used all elements of action
-        assert len(action) == 0
+        assert len(action) == 1, ('action维度到底是多少？')
+        agent.action.act = action
 
     # reset rendering assets
     def _reset_render(self):

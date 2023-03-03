@@ -1,6 +1,8 @@
 import numpy as np
-from mape.multiagent.environment import MultiAgentEnv
-import mape.multiagent.scenarios as scenarios
+# from mape.multiagent.environment import MultiAgentEnv
+# import mape.multiagent.scenarios as scenarios
+from allocation_tasks.multiagent.environment import MultiAgentEnv
+import allocation_tasks.multiagent.scenarios as scenarios
 import gym_vecenv
 
 
@@ -20,8 +22,7 @@ def make_env(env_id, seed, rank, num_agents, dist_threshold, arena_size, identit
 
 
 def make_multiagent_env(env_id, num_agents, dist_threshold, arena_size, identity_size):
-    scenario = scenarios.load(env_id+".py").Scenario(num_agents=num_agents, dist_threshold=dist_threshold,
-                                                     arena_size=arena_size, identity_size=identity_size)
+    scenario = scenarios.load(env_id+".py").Scenario(num_agents=num_agents)
     world = scenario.make_world()
 
     env = MultiAgentEnv(world=world, 
@@ -38,8 +39,7 @@ def make_multiagent_env(env_id, num_agents, dist_threshold, arena_size, identity
 
 def make_parallel_envs(args):
     # make parallel environments
-    envs = [make_env(args.env_name, args.seed, i, args.num_agents,
-                     args.dist_threshold, args.arena_size, args.identity_size) for i in range(args.num_processes)]
+    envs = [make_env(args.env_name, args.seed, i, args.num_agents) for i in range(args.num_processes)]
     if args.num_processes > 1:
         envs = gym_vecenv.SubprocVecEnv(envs)
     else:

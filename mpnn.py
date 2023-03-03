@@ -15,14 +15,14 @@ def weights_init(m):
 
 
 class MPNN(nn.Module):
-    def __init__(self, action_space, num_agents, num_entities, input_size=16, hidden_dim=128, embed_dim=None,
+    def __init__(self, action_space, num_agents, input_size=16, hidden_dim=128, embed_dim=None,
                  pos_index=2, norm_in=False, nonlin=nn.ReLU, n_heads=1, mask_dist=None, entity_mp=False):
         super().__init__()
 
         self.h_dim = hidden_dim
         self.nonlin = nonlin
         self.num_agents = num_agents # number of agents
-        self.num_entities = num_entities # number of entities
+
         self.K = 3 # message passing rounds
         self.embed_dim = self.h_dim if embed_dim is None else embed_dim
         self.n_heads = n_heads
