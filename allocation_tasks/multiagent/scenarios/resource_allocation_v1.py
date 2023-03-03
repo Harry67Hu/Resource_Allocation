@@ -11,6 +11,7 @@ class Scenario(BaseScenario):
 
         self.num_agents = ScenarioConfig.num_agents
         self.knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
+        self.joint_reward = 0
 
     def make_world(self):
         world = World()
@@ -105,12 +106,12 @@ class Scenario(BaseScenario):
             1. 当focus目标的需求被解决或者到达临时时间步后,给予奖励和成本惩罚
             2. 当episode结束后,全体智能体得到一个共同的奖励和成本惩罚
         '''
-        joint_reward = 0
+        self.joint_reward = 0
         if world.done:
             done_partial = np.sum(world.targes_done) / len(world.targets_done)
-            joint_reward += done_partial * ScenarioConfig.total_reward
-            joint_reward -= world.total_cost
-            return joint_reward
+            self.joint_reward += done_partial * ScenarioConfig.total_reward
+            self.joint_reward -= world.total_cost
+            return self.joint_reward
         else:
             if world.single_reward > 0:
                 print("有效输出了一个小奖励！调试成功！")
@@ -166,7 +167,7 @@ class Scenario(BaseScenario):
 
         # if world.num_is_agent_thres >= len(world.agents):
         #     condition1 = True
-        if world.steps >= world.MaxEpisodeStep:
+        if world.steps >= world.max_episode_step:
             condition2 = True
         if np.all(world.targets_done == 1):
             self.is_success = True

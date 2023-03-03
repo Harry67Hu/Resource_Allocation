@@ -77,7 +77,7 @@ class MultiAgentEnv(gym.Env):
 
     @property
     def episode_limit(self):
-        return self.world.MaxEpisodeStep
+        return self.world.max_episode_step
     
     def seed(self, seed=None):
         np.random.seed(seed)
@@ -126,10 +126,10 @@ class MultiAgentEnv(gym.Env):
         return self.info_callback(agent, self.world)
 
     # get observation for a particular agent
-    def _get_obs(self):
+    def _get_obs(self, agent):
         if self.observation_callback is None:
             return np.zeros(0)
-        return self.observation_callback(self.world)
+        return self.observation_callback(agent, self.world)
 
     # get dones for a particular agent
     # unused right now -- agents are allowed to go beyond the viewing screen
@@ -146,7 +146,6 @@ class MultiAgentEnv(gym.Env):
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
-        assert len(action) == 1, ('action维度到底是多少？')
         agent.action.act = action
 
     # reset rendering assets

@@ -102,7 +102,7 @@ class MPNN(nn.Module):
         # inp should be (batch_size,input_size)
         # inp - {iden, vel(2), pos(2), entities(...)}
         agent_inp = inp[:,:self.input_size]          
-        mask = self.calculate_mask(agent_inp) # shape <batch_size/N,N,N> with 0 for comm allowed, 1 for restricted
+        # mask = self.calculate_mask(agent_inp) # shape <batch_size/N,N,N> with 0 for comm allowed, 1 for restricted
 
         h = self.encoder(agent_inp) # should be (batch_size,self.h_dim)
         if self.entity_mp:
@@ -115,7 +115,7 @@ class MPNN(nn.Module):
         h = h.view(self.num_agents,-1,self.h_dim).transpose(0,1) # should be (batch_size/N,N,self.h_dim)
         
         for k in range(self.K):
-            m, attn = self.messages(h, mask=mask, return_attn=True) # should be <batch_size/N,N,self.embed_dim>
+            m, attn = self.messages(h, mask=None, return_attn=True) # should be <batch_size/N,N,self.embed_dim>
             h = self.update(torch.cat((h,m),2)) # should be <batch_size/N,N,self.h_dim>
         h = h.transpose(0,1).contiguous().view(-1,self.h_dim)
         

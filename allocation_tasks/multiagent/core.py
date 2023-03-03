@@ -67,10 +67,11 @@ class Action(object):
     # 此处将数字act转译为分配出来的载荷
     def act2source(self):
         real_act = self.act2real()
-        knowledge = Knowledge(num_requirement_type=self.num_requirement_type, num_plane_type=self.num_plane_type, num_target_type=self.num_target_type)
+        knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
         PLANE_CAPACITY = knowledge.get_plane_capacity()
         resource_output = np.zeros(self.num_requirement_type, dtype=int)
-        for i, num in enumerate(real_act):
+        for i in range(len(real_act)):
+            num = real_act[i]
             resource_output += num * PLANE_CAPACITY[i]
         return resource_output
 
@@ -193,22 +194,23 @@ class World(object):
         self.steps += 1
 
     def integrate_state(self):
-        knowledge = Knowledge(num_requirement_type=self.num_requirement_type, num_plane_type=self.num_plane_type, num_target_type=self.num_target_type)
+        knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
             
         # 加载智能体动作对基地的影响(对基地智能体中的实际飞机数目有影响)
         for i, agent in enumerate(self.agents):
-            real_act = agent.action.act2real
-            for j, plane_num in enumerate(real_act):
+            real_act = agent.action.act2real()
+            for j in range(len(real_act)):
+                plane_num  = real_act[j]
                 if plane_num > 0:
                     real_index = knowledge.get_plane_type()[j]
                     agent.state.real_planes[real_index] -= plane_num 
         # 加载智能体动作对目标的影响
         for i, agent in enumerate(self.agents):
-            resource_output = agent.action.act2source
-            self.targets[self.target_focus_on].requirements -= resource_output
+            resource_output = agent.action.act2source()
+            self.targets[self.target_focus_on].state.requirements -= resource_output
         # 判断是否解决当前任务
         self.focus_time += 1
-        tar = self.targets[self.target_focus_on],
+        tar = self.targets[self.target_focus_on]
         if np.all(tar.state.requirements <= 0):
             self.is_focus_done = True
             self.targets_done[self.target_focus_on] = 1
@@ -231,7 +233,7 @@ class World(object):
             这个版本中认为每类飞机的成本都是固定的,都是c
         '''
         for i, agent in enumerate(self.agents):
-            real_act = agent.action.act2real
+            real_act = agent.action.act2real()
             temp_cost = np.sum(real_act * ScenarioConfig.plane_cost)
             self.single_cost += temp_cost
             self.total_cost += temp_cost

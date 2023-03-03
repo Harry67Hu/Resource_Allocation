@@ -13,15 +13,15 @@ def normalize_obs(obs, mean, std):
         return obs
 
 
-def make_env(env_id, seed, rank, num_agents, dist_threshold, arena_size, identity_size):
+def make_env(env_id, seed, rank, num_agents):
     def _thunk():
-        env = make_multiagent_env(env_id, num_agents, dist_threshold, arena_size, identity_size)
+        env = make_multiagent_env(env_id, num_agents)
         env.seed(seed + rank) # seed not implemented
         return env
     return _thunk
 
 
-def make_multiagent_env(env_id, num_agents, dist_threshold, arena_size, identity_size):
+def make_multiagent_env(env_id, num_agents):
     scenario = scenarios.load(env_id+".py").Scenario(num_agents=num_agents)
     world = scenario.make_world()
 
@@ -32,7 +32,7 @@ def make_multiagent_env(env_id, num_agents, dist_threshold, arena_size, identity
                         info_callback=scenario.info if hasattr(scenario, 'info') else None,
                         discrete_action=True,
                         done_callback=scenario.done,
-                        cam_range=arena_size
+                        cam_range=600,
                         )
     return env
 
