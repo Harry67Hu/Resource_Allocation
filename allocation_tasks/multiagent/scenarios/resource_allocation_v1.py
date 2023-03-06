@@ -219,3 +219,19 @@ def convert_to_pole2D(vec):
     angle = math.degrees(rad_angle)
     # print(Range, angle)    # (-180,+180]
     return Range, angle
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # 将经纬度转化为弧度
+    lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
+
+    # haversine公式
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
+    c = 2 * np.arcsin(np.sqrt(a)) 
+    r = 6371 # 地球平均半径，单位为千米
+    return c * r
