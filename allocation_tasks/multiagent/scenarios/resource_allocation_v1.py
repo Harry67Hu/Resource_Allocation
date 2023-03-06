@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import copy
 from allocation_tasks.multiagent.core import World, Agent, Target
 from allocation_tasks.multiagent.scenario import BaseScenario
 from scipy.optimize import linear_sum_assignment
@@ -28,8 +29,8 @@ class Scenario(BaseScenario):
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
             agent.index = i
-            agent.state.real_planes = self.knowledge.get_agent_plane()[i]
-            agent.real_plane_threshold = self.knowledge.get_agent_thres()[i]
+            agent.state.real_planes = copy.deepcopy(self.knowledge.get_agent_plane()[i])
+            agent.real_plane_threshold = copy.deepcopy(self.knowledge.get_agent_thres()[i])
         
         # 定义目标虚拟实体并赋予属性[因为目标数目不定，定义放到了reset_world函数中]
 
@@ -41,13 +42,14 @@ class Scenario(BaseScenario):
         # 重置场景状态
         world.steps = 0
         world.done = False
+        world.no_target2choose = False
 
         # 重置智能体状态
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
             agent.index = i
-            agent.state.planes = self.knowledge.get_agent_plane()[i]
-            agent.real_plane_threshold = self.knowledge.get_agent_thres()[i]
+            agent.state.planes = copy.deepcopy(self.knowledge.get_agent_plane()[i])
+            agent.real_plane_threshold = copy.deepcopy(self.knowledge.get_agent_thres()[i])
 
         # 生成可行目标(可行解)
         a_int = random.randint(10, 29) # 第一个维度 a<30
@@ -60,27 +62,27 @@ class Scenario(BaseScenario):
         world.targets = [Target() for i in range(60 + 2*84 + 2*48 + 2*d_int)]
         for i in range(2*a_int):
             world.targets[target_index].type = 0
-            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[0]
+            world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[0])
             target_index += 1
         for i in range(60 - 2*a_int):
             world.targets[target_index].type = 1
-            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[1]
+            world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[1])
             target_index += 1
         for i in range(2*e_int):
             world.targets[target_index].type = 2
-            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[2]
+            world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[2])
             target_index += 1
         for i in range(d_int + 3*d_int):
             world.targets[target_index].type = 3
-            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[3]
+            world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[3])
             target_index += 1
         for i in range(2*(84-e_int)):
             world.targets[target_index].type = 4
-            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[4]
+            world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[4])
             target_index += 1
         for i in range(2*(48-d_int)):
             world.targets[target_index].type = 5
-            world.targets[target_index].state.requirements = self.knowledge.get_target_requirement()[5]
+            world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[5])
             target_index += 1
 
         # 生成目标后对目标相关的量进行重置
@@ -99,6 +101,7 @@ class Scenario(BaseScenario):
         world.is_focus_done = False
         world.focus_time = 0
 
+        assert True
 
     def reward(self, agent, world):
         '''
@@ -107,15 +110,15 @@ class Scenario(BaseScenario):
             2. 当episode结束后,全体智能体得到一个共同的奖励和成本惩罚
         '''
         self.joint_reward = 0
+        single_reward = 0
         if world.done:
-            done_partial = np.sum(world.targes_done) / len(world.targets_done)
+            done_partial = np.sum(world.targets_done) / len(world.targets_done)
             self.joint_reward += done_partial * ScenarioConfig.total_reward
             self.joint_reward -= world.total_cost
             return self.joint_reward
         else:
             if world.single_reward > 0:
-                print("有效输出了一个小奖励！调试成功！")
-            single_reward = world.single_reward * ScenarioConfig.single_target_reward
+                single_reward = world.single_reward * ScenarioConfig.single_target_reward
             return single_reward
     
     
@@ -157,12 +160,14 @@ class Scenario(BaseScenario):
         '''
             episode终止条件
             1. 所有基地智能体到达能支出的阈值
-            2. 超过最大时间步
-            3. 所有目标的需求被解决 = success
+            2. 超过最大时间步(所有目标都被遍历过且每个目标遍历的时候都把所有步长用了)(此情况不太常见)
+            3. 所有目标都被遍历过但是没有成功
+            4. 所有目标的需求被解决 = success
             
         '''
         condition1 = False
         condition2 = False
+        condition3 = world.no_target2choose
         self.is_success = False
 
         # if world.num_is_agent_thres >= len(world.agents):
@@ -172,7 +177,7 @@ class Scenario(BaseScenario):
         if np.all(world.targets_done == 1):
             self.is_success = True
         
-        world.done = condition1 or condition2 or self.is_success
+        world.done = condition1 or condition2 or condition3 or self.is_success
         return world.done
 
     def info(self, agent, world):

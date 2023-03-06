@@ -143,6 +143,7 @@ class World(object):
 
         self.steps = 0
         self.max_episode_step = 50
+        self.no_target2choose = False # 没有可以选择的目标了
         self.done = False # 整个episode结束
 
         self.target_focus_on = 0 # 当前步集中考虑的目标索引
@@ -196,6 +197,13 @@ class World(object):
     def integrate_state(self):
         knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
             
+        # test
+        test = []
+        test_req = []
+        for target in self.targets:
+            test.append(target.type)
+            test_req.append(target.state.requirements)
+
         # 加载智能体动作对基地的影响(对基地智能体中的实际飞机数目有影响)
         for i, agent in enumerate(self.agents):
             real_act = agent.action.act2real()
@@ -216,17 +224,30 @@ class World(object):
             self.targets_done[self.target_focus_on] = 1
             self.targets_type_remain[tar.type] -= 1 
             self.single_reward = 1
-            print("目标{}的需求被解决".format(tar.index))
-            print("该目标更新后的需求为{}".format(tar.state.requirements))
+            # print("目标{}的需求被解决".format(tar.index))
+            # print("该目标更新后的需求为{}".format(tar.state.requirements))
+        
+
+        # test
+        test = []
+        test_req = []
+        for target in self.targets:
+            test.append(target.type)
+            test_req.append(target.state.requirements)
+
 
          # 对focus目标做更新 TODO 在世界定义的时候需要先更新focus
         if self.is_focus_done or self.focus_time >= self.num_plane_type - 1:
-            idx = np.random.choice(len(self.target_index_list))
-            self.target_focus_on = self.target_index_list[idx] # 随机选取一个target
-            self.target_index_list = np.delete(self.target_index_list, idx)
-            self.is_focus_done = False
-            self.focus_time = 0
-            self.single_cost = 0
+            # 如果没有任何可选的目标，则episode结束
+            if len(self.target_index_list) > 0:
+                idx = np.random.choice(len(self.target_index_list))
+                self.target_focus_on = self.target_index_list[idx] # 随机选取一个target
+                self.target_index_list = np.delete(self.target_index_list, idx)
+                self.is_focus_done = False
+                self.focus_time = 0
+                self.single_cost = 0
+            else:
+                self.no_target2choose = True
     
     def calculate_cost(self):
         '''
