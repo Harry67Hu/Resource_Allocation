@@ -43,6 +43,7 @@ class Scenario(BaseScenario):
         world.steps = 0
         world.done = False
         world.no_target2choose = False
+        world.total_cost = 0
 
         # 重置智能体状态
         for i, agent in enumerate(world.agents):
@@ -115,6 +116,8 @@ class Scenario(BaseScenario):
             done_partial = np.sum(world.targets_done) / len(world.targets_done)
             self.joint_reward += done_partial * ScenarioConfig.total_reward
             self.joint_reward -= world.total_cost
+            # print("完成率为:{}".format(done_partial))
+            # print("总成本为:{}".format(world.total_cost))
             return self.joint_reward
         else:
             if world.single_reward > 0:

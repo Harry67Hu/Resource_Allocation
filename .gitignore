@@ -1,1 +1,5 @@
 marlsave
+__pycache__/
+
+*/__pycache__
+allocation_tasks/multiagent/scenarios/__pycache__
