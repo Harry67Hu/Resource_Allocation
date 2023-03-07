@@ -106,8 +106,8 @@ class Scenario(BaseScenario):
 
     def reward(self, agent, world):
         '''
-            智能体的奖励, 需要区分全体奖励和个体奖励
-            1. 当focus目标的需求被解决或者到达临时时间步后,给予奖励和成本惩罚
+            智能体的奖励, 需要区分全体奖励和个体奖励(
+            1. 当focus目标的需求被解决或者到达临时时间步后,给予奖励和成本惩罚(目前是只给奖励)
             2. 当episode结束后,全体智能体得到一个共同的奖励和成本惩罚
         '''
         self.joint_reward = 0
