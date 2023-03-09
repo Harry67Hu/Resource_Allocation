@@ -29,8 +29,8 @@ def get_args():
     # evaluation
     parser.add_argument('--num-eval-episodes', type=int, default=30, help='number of episodes to evaluate with')
     parser.add_argument('--dist-threshold', type=float, default=0.1, help='distance within landmark is considered covered (for simple_spread)')
-    parser.add_argument('--render', action='store_true')
-    parser.add_argument('--record-video', action='store_true', default=False, help='record evaluation video')
+    # parser.add_argument('--render', action='store_true')
+    # parser.add_argument('--record-video', action='store_true', default=False, help='record evaluation video')
     
     # PPO
     parser.add_argument('--algo', default='ppo', help='algorithm to use: a2c | ppo | acktr')
@@ -51,7 +51,7 @@ def get_args():
     parser.add_argument('--log-interval', type=int, default=10, help='log interval, one log per n updates (default: 10)')
     
     # Miscellaneous
-    parser.add_argument('--test', default=True, action='store_true')
+    parser.add_argument('--test', default=False, action='store_true')
     parser.add_argument('--load-dir', default=None, help='filename to load all policies from')
     parser.add_argument('--eval-interval', default=50, type=int)
     parser.add_argument('--continue-training', action='store_true')
@@ -71,9 +71,6 @@ def get_args():
     if args.continue_training:
         assert args.load_dir is not None and os.path.exists(args.load_dir), \
         "Please specify valid model file to load if you want to continue training"
-
-    if args.identity_size > 0:
-        assert args.identity_size >= args.num_agents, 'identity size should either be 0 or >= number of agents!'
 
     if not args.masking:
         args.mask_dist = None

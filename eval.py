@@ -84,9 +84,9 @@ def evaluate(args, seed, policies_list, ob_rms=None, render=False, env=None, mas
                 per_step_rewards[t][0],info['n'][0]['world_steps']))
         all_episode_rewards[t, :] = episode_rewards # all_episode_rewards shape: num_eval_episodes x num agents
 
-        if args.record_video:
-            # print(attn)
-            input('Press enter to continue: ')
+        # if args.record_video:
+        #     # print(attn)
+        #     input('Press enter to continue: ')
                 
     return all_episode_rewards, per_step_rewards, final_min_dists, num_success, episode_length
 

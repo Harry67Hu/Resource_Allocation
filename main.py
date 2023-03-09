@@ -11,6 +11,8 @@ from tensorboardX import SummaryWriter
 from eval import evaluate
 from learner import setup_master
 from pprint import pprint
+import matplotlib.pyplot as plt
+
 
 
 np.set_printoptions(suppress=True, precision=4)
@@ -30,6 +32,7 @@ def train(args, return_early=False):
 
     # start simulations
     start = datetime.datetime.now()
+    mean_rewards_list = [] # 
     for j in range(args.num_updates):
         for step in range(args.num_steps):
             with torch.no_grad():
@@ -69,6 +72,10 @@ def train(args, return_early=False):
                   format(j, total_num_steps, str(end-start), int(total_num_steps / seconds), 
                   mean_reward, dist_entropy[0], value_loss[0], action_loss[0]))
             if not args.test:
+                mean_rewards_list.append(mean_reward) #
+                plt.plot(mean_rewards_list) #
+                plt.savefig(args.save_dir + '/reward_curve.png') #
+
                 for idx in range(n):
                     writer.add_scalar('agent'+str(idx)+'/training_reward', mean_reward[idx], j)
 
