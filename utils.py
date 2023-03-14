@@ -44,8 +44,8 @@ def make_parallel_envs(args):
         envs = gym_vecenv.SubprocVecEnv(envs)
     else:
         envs = gym_vecenv.DummyVecEnv(envs)
-
-    envs = gym_vecenv.MultiAgentVecNormalize(envs, ob=False, ret=True)
+    # 此处都没有做标准化处理！
+    envs = gym_vecenv.MultiAgentVecNormalize(envs, ob=False, ret=False)
     return envs
 
 

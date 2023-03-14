@@ -145,6 +145,7 @@ class World(object):
         self.max_episode_step = 50
         self.no_target2choose = False # 没有可以选择的目标了
         self.done = False # 整个episode结束
+        self.done_ratio = 0
 
         self.target_focus_on = 0 # 当前步集中考虑的目标索引
         self.target_index_list = [] # 当前步剩余的还没有考虑的目标索引列表
@@ -192,7 +193,9 @@ class World(object):
         self.integrate_state()
         # 1. 载荷及飞行成本模型 目前为每类飞机的成本固定为单位1
         self.calculate_cost()
+        self.done_ratio = np.sum(self.targets_done) / len(self.targets_done)
         self.steps += 1
+        
 
     def integrate_state(self):
         knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)

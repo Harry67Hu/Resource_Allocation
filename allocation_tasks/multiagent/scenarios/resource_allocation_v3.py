@@ -5,7 +5,10 @@ from allocation_tasks.multiagent.core import World, Agent, Target
 from allocation_tasks.multiagent.scenario import BaseScenario
 from scipy.optimize import linear_sum_assignment
 from allocation_tasks.multiagent.basic_knowledge import Knowledge, ScenarioConfig
-
+'''
+    相对v2版本, 在单纯减少目标的数目以减少step长度的基础上, 每一步都给予一定的奖励和惩罚 【统计完成目标的情况 + 统计成本】
+    需要泛化的维度有： 学习每个动作对于环境的影响 + 学习每种类型目标的需求 + 每个目标是随机选取的 + 每个目标是随机生成的
+'''
 
 class Scenario(BaseScenario):
     def __init__(self, num_agents=4, dist_threshold=0.1, arena_size=1, identity_size=0, process_id=-1):
@@ -189,7 +192,7 @@ class Scenario(BaseScenario):
         '''
 
         return {'is_success': self.is_success, 'world_steps': world.steps,
-                'reward':self.joint_reward, 'XXX':self.XXX/world.XXX}
+                'reward':self.joint_reward, }
     
 
 

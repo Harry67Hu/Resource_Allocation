@@ -31,7 +31,7 @@ def setup_master(args, env=None, return_env=False):
         num_entities = 1
     elif args.env_name == 'simple_line':
         num_entities = 2
-    elif args.env_name == 'resource_allocation_v1':
+    elif 'resource_allocation' in args.env_name:
         pass
     else:
         raise NotImplementedError('Unknown environment, define entity_mp for this!')

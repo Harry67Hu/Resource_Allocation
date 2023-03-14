@@ -9,7 +9,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='RL')
     
     # environment
-    parser.add_argument('--env-name', default='resource_allocation_v1', help='one from {simple_spread, simple_formation, simple_line})')
+    parser.add_argument('--env-name', default='resource_allocation_v2', help='one from {simple_spread, simple_formation, simple_line})')
     # parser.add_argument('--env-name', default='simple_formation', help='one from {simple_spread, simple_formation, simple_line})')
     parser.add_argument('--num-agents', type=int, default=5)
     parser.add_argument('--masking', action='store_true', help='restrict communication to within some threshold')
@@ -27,7 +27,7 @@ def get_args():
     # parser.add_argument('--arena-size', type=int, default=1, help='size of arena')
 
     # evaluation
-    parser.add_argument('--num-eval-episodes', type=int, default=30, help='number of episodes to evaluate with')
+    parser.add_argument('--num-eval-episodes', type=int, default=10, help='number of episodes to evaluate with')
     parser.add_argument('--dist-threshold', type=float, default=0.1, help='distance within landmark is considered covered (for simple_spread)')
     # parser.add_argument('--render', action='store_true')
     # parser.add_argument('--record-video', action='store_true', default=False, help='record evaluation video')
@@ -51,6 +51,7 @@ def get_args():
     parser.add_argument('--log-interval', type=int, default=10, help='log interval, one log per n updates (default: 10)')
     
     # Miscellaneous
+    parser.add_argument('--debug', type=bool, default=True)
     parser.add_argument('--test', default=False, action='store_true')
     parser.add_argument('--load-dir', default=None, help='filename to load all policies from')
     parser.add_argument('--eval-interval', default=50, type=int)
@@ -61,11 +62,18 @@ def get_args():
     
     args = parser.parse_args()
 
+    # 处理debug模式
+    if args.debug:
+        args.num_processes = 2
+        args.num_eval_episodes = 2
+        args.eval_interval = 20
+
+
     args.clipped_value_loss = not args.no_clipped_value_loss
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
-    args.save_dir = 'marlsave/save_new/'+args.save_dir
+    args.save_dir = 'marlsave/'+args.save_dir
     args.log_dir = args.save_dir + '/' + args.log_dir
 
     if args.continue_training:

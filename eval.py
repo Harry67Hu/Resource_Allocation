@@ -40,6 +40,8 @@ def evaluate(args, seed, policies_list, ob_rms=None, render=False, env=None, mas
     final_min_dists = []
     num_success = 0
     episode_length = 0
+    done_ratio = []
+    total_cost = []
 
     for t in range(num_eval_episodes):
         obs = env.reset()
@@ -68,6 +70,7 @@ def evaluate(args, seed, policies_list, ob_rms=None, render=False, env=None, mas
                 env.render(attn=attn)
                 if args.record_video:
                     time.sleep(0.08)
+                
 
         per_step_rewards[t] = episode_rewards/episode_steps
         num_success += info['n'][0]['is_success']
@@ -78,6 +81,11 @@ def evaluate(args, seed, policies_list, ob_rms=None, render=False, env=None, mas
             final_min_dists.append(env.world.min_dists)
         elif args.env_name == 'simple_formation' or args.env_name=='simple_line':
             final_min_dists.append(env.world.dists)
+        if 'resource_allocation' in args.env_name: 
+            assert info['n'][0]['done_ratio'] is not None
+            done_ratio.append(info['n'][0]['done_ratio'])
+            total_cost.append(info['n'][0]['total_cost'])
+
 
         if render:
             print("Ep {} | Success: {} \n Av per-step reward: {:.2f} | Ep Length {}".format(t,info['n'][0]['is_success'],
@@ -88,7 +96,7 @@ def evaluate(args, seed, policies_list, ob_rms=None, render=False, env=None, mas
         #     # print(attn)
         #     input('Press enter to continue: ')
                 
-    return all_episode_rewards, per_step_rewards, final_min_dists, num_success, episode_length
+    return all_episode_rewards, per_step_rewards, final_min_dists, num_success, episode_length, done_ratio, total_cost
 
 
 if __name__ == '__main__':

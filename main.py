@@ -33,6 +33,11 @@ def train(args, return_early=False):
     # start simulations
     start = datetime.datetime.now()
     mean_rewards_list = [] # 
+    dist_entropy_list = []
+    value_loss_list = []
+    action_loss_list = []
+    done_ratio_list = []
+    total_cost_list = []
     for j in range(args.num_updates):
         for step in range(args.num_steps):
             with torch.no_grad():
@@ -44,6 +49,7 @@ def train(args, return_early=False):
             masks = torch.FloatTensor(1-1.0*done).to(args.device)
             final_rewards *= masks
             final_rewards += (1 - masks) * episode_rewards
+            # assert torch.all(final_rewards[:,0] == final_rewards[:,1])
             episode_rewards *= masks
 
             master.update_rollout(obs, reward, masks)
@@ -68,13 +74,31 @@ def train(args, return_early=False):
             end = datetime.datetime.now()
             seconds = (end-start).total_seconds()
             mean_reward = final_rewards.mean(dim=0).cpu().numpy()
+            assert mean_reward[0] == mean_reward[1]
             print("Updates {} | Num timesteps {} | Time {} | FPS {}\nMean reward {}\nEntropy {:.4f} Value loss {:.4f} Policy loss {:.4f}\n".
                   format(j, total_num_steps, str(end-start), int(total_num_steps / seconds), 
                   mean_reward, dist_entropy[0], value_loss[0], action_loss[0]))
             if not args.test:
-                mean_rewards_list.append(mean_reward) #
-                plt.plot(mean_rewards_list) #
-                plt.savefig(args.save_dir + '/reward_curve.png') #
+                mean_rewards_list.append(mean_reward[0]) 
+                plt.plot(mean_rewards_list) 
+                plt.savefig(args.save_dir + '/reward_curve.png') 
+                plt.clf()
+                dist_entropy_list.append(dist_entropy[0])
+                value_loss_list.append(value_loss[0])
+                action_loss_list.append(action_loss[0])
+                plt.plot(dist_entropy_list) 
+                plt.savefig(args.save_dir + '/entropy_curve.png') 
+                plt.clf()
+                plt.plot(value_loss_list) 
+                plt.savefig(args.save_dir + '/value_loss_curve.png') 
+                plt.clf()
+
+                plt.plot(action_loss_list) 
+                plt.savefig(args.save_dir + '/action_loss_curve.png') 
+                plt.clf()
+
+
+
 
                 for idx in range(n):
                     writer.add_scalar('agent'+str(idx)+'/training_reward', mean_reward[idx], j)
@@ -86,11 +110,27 @@ def train(args, return_early=False):
         if args.eval_interval is not None and j%args.eval_interval==0:
             ob_rms = (None, None) if envs.ob_rms is None else (envs.ob_rms[0].mean, envs.ob_rms[0].var)
             print('===========================================================================================')
-            _, eval_perstep_rewards, final_min_dists, num_success, eval_episode_len = evaluate(args, None, master.all_policies,
+            _, eval_perstep_rewards, final_min_dists, num_success, eval_episode_len, done_ratio, total_cost  = evaluate(args, None, master.all_policies,
                                                                                                ob_rms=ob_rms, env=eval_env,
                                                                                                master=eval_master)
             print('Evaluation {:d} | Mean per-step reward {:.2f}'.format(j//args.eval_interval, eval_perstep_rewards.mean()))
             print('Num success {:d}/{:d} | Episode Length {:.2f}'.format(num_success, args.num_eval_episodes, eval_episode_len))
+            print("done ratio is {}".format(done_ratio))
+            print("total_cost is {}".format(total_cost))
+
+            done_ratio_list.append(np.array(done_ratio).mean())
+            total_cost_list.append(np.array(total_cost).mean())
+            plt.plot(done_ratio_list) 
+            plt.savefig(args.save_dir + '/done_ratio_mean_curve.png') 
+            plt.clf()
+
+
+            plt.plot(total_cost_list) 
+            plt.savefig(args.save_dir + '/total_cost_mean_curve.png')
+            plt.clf()
+
+
+
             if final_min_dists:
                 print('Final_dists_mean {}'.format(np.stack(final_min_dists).mean(0)))
                 print('Final_dists_var {}'.format(np.stack(final_min_dists).var(0)))

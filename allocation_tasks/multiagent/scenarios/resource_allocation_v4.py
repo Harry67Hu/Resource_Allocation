@@ -5,7 +5,10 @@ from allocation_tasks.multiagent.core import World, Agent, Target
 from allocation_tasks.multiagent.scenario import BaseScenario
 from scipy.optimize import linear_sum_assignment
 from allocation_tasks.multiagent.basic_knowledge import Knowledge, ScenarioConfig
-
+'''
+    相对v1版本,在单纯减少目标的数目以减少step长度的基础上, 只给予奖励且没有动作屏蔽 【统计完成目标的情况 + 统计成本】
+    需要泛化的维度有： 学习每个动作对于环境的影响 + 学习每种类型目标的需求 + 每个目标是随机选取的 + 每个目标是随机生成的
+'''
 
 class Scenario(BaseScenario):
     def __init__(self, num_agents=4, dist_threshold=0.1, arena_size=1, identity_size=0, process_id=-1):
@@ -13,6 +16,7 @@ class Scenario(BaseScenario):
         self.num_agents = ScenarioConfig.num_agents
         self.knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
         self.joint_reward = 0
+        self.done_ratio = None
 
     def make_world(self):
         world = World()
@@ -53,19 +57,19 @@ class Scenario(BaseScenario):
             agent.real_plane_threshold = copy.deepcopy(self.knowledge.get_agent_thres()[i])
 
         # 生成可行目标(可行解)
-        a_int = random.randint(10, 29) # 第一个维度 a<30
-        d_int = random.randint(20, 47) # 第二个维度 d<48
-        e_int = random.randint(20, 41) # 第三个维度 e<42
+        a_int = random.randint(1, 3) # 第一个维度 a<30
+        d_int = random.randint(1, 5) # 第二个维度 d<48
+        e_int = random.randint(1, 4) # 第三个维度 e<42
         # a_int = random.randint(1, 29) # 第一个维度 a<30
         # d_int = random.randint(1, 47) # 第二个维度 d<48
         # e_int = random.randint(1, 41) # 第三个维度 e<42
         target_index = 0
-        world.targets = [Target() for i in range(60 + 2*84 + 2*48 + 2*d_int)]
+        world.targets = [Target() for i in range(8 + 16 + 12 + 2*d_int)]
         for i in range(2*a_int):
             world.targets[target_index].type = 0
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[0])
             target_index += 1
-        for i in range(60 - 2*a_int):
+        for i in range(8 - 2*a_int):
             world.targets[target_index].type = 1
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[1])
             target_index += 1
@@ -77,11 +81,11 @@ class Scenario(BaseScenario):
             world.targets[target_index].type = 3
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[3])
             target_index += 1
-        for i in range(2*(84-e_int)):
+        for i in range(2*(8-e_int)):
             world.targets[target_index].type = 4
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[4])
             target_index += 1
-        for i in range(2*(48-d_int)):
+        for i in range(2*(6-d_int)):
             world.targets[target_index].type = 5
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[5])
             target_index += 1
@@ -113,10 +117,10 @@ class Scenario(BaseScenario):
         self.joint_reward = 0
         single_reward = 0
         if world.done:
-            done_partial = np.sum(world.targets_done) / len(world.targets_done)
-            self.joint_reward += done_partial * ScenarioConfig.total_reward
+            self.done_ratio = np.sum(world.targets_done) / len(world.targets_done)
+            self.joint_reward += self.done_ratio * ScenarioConfig.total_reward
             self.joint_reward -= world.total_cost
-            # print("完成率为:{}".format(done_partial))
+            # print("完成率为:{}".format(done_ratio))
             # print("总成本为:{}".format(world.total_cost))
             return self.joint_reward
         else:
@@ -189,7 +193,7 @@ class Scenario(BaseScenario):
         '''
 
         return {'is_success': self.is_success, 'world_steps': world.steps,
-                'reward':self.joint_reward, 'XXX':self.XXX/world.XXX}
+                'reward':self.joint_reward, 'total_cost': world.total_cost,'done_ratio': self.done_ratio,}
     
 
 
