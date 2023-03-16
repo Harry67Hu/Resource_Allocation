@@ -7,6 +7,7 @@ from scipy.optimize import linear_sum_assignment
 from allocation_tasks.multiagent.basic_knowledge import Knowledge, ScenarioConfig
 '''
     相对v1版本, 单纯减少目标的数目以减少step长度, 同时减少奖励以防止critic loss过大 【统计完成目标的情况 + 统计成本】
+    在v2版本基础上将目标数目增加为10倍
     需要泛化的维度有： 学习每个动作对于环境的影响 + 学习每种类型目标的需求 + 每个目标是随机选取的 + 每个目标是随机生成的
 '''
 
@@ -58,19 +59,19 @@ class Scenario(BaseScenario):
             agent.real_plane_threshold = copy.deepcopy(self.knowledge.get_agent_thres()[i])
 
         # 生成可行目标(可行解)
-        a_int = random.randint(1, 3) # 第一个维度 a<30
-        d_int = random.randint(1, 5) # 第二个维度 d<48
-        e_int = random.randint(1, 4) # 第三个维度 e<42
+        a_int = random.randint(10, 29) # 第一个维度 a<30
+        d_int = random.randint(20, 47) # 第二个维度 d<48
+        e_int = random.randint(20, 41) # 第三个维度 e<42
         # a_int = random.randint(1, 29) # 第一个维度 a<30
         # d_int = random.randint(1, 47) # 第二个维度 d<48
         # e_int = random.randint(1, 41) # 第三个维度 e<42
         target_index = 0
-        world.targets = [Target() for i in range(8 + 16 + 12 + 2*d_int)]
+        world.targets = [Target() for i in range(60 + 2*84 + 2*48 + 2*d_int)]
         for i in range(2*a_int):
             world.targets[target_index].type = 0
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[0])
             target_index += 1
-        for i in range(8 - 2*a_int):
+        for i in range(60 - 2*a_int):
             world.targets[target_index].type = 1
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[1])
             target_index += 1
@@ -82,11 +83,11 @@ class Scenario(BaseScenario):
             world.targets[target_index].type = 3
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[3])
             target_index += 1
-        for i in range(2*(8-e_int)):
+        for i in range(2*(84-e_int)):
             world.targets[target_index].type = 4
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[4])
             target_index += 1
-        for i in range(2*(6-d_int)):
+        for i in range(2*(48-d_int)):
             world.targets[target_index].type = 5
             world.targets[target_index].state.requirements = copy.deepcopy(self.knowledge.get_target_requirement()[5])
             target_index += 1

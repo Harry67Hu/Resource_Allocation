@@ -51,7 +51,7 @@ def get_args():
     parser.add_argument('--log-interval', type=int, default=10, help='log interval, one log per n updates (default: 10)')
     
     # Miscellaneous
-    parser.add_argument('--debug', type=bool, default=True)
+    parser.add_argument('--debug', type=int, default=1)
     parser.add_argument('--test', default=False, action='store_true')
     parser.add_argument('--load-dir', default=None, help='filename to load all policies from')
     parser.add_argument('--eval-interval', default=50, type=int)
@@ -63,10 +63,14 @@ def get_args():
     args = parser.parse_args()
 
     # 处理debug模式
-    if args.debug:
+    if args.debug == 1:
         args.num_processes = 2
         args.num_eval_episodes = 2
         args.eval_interval = 20
+        args.save_dir = 'debug_temp'
+        args.test = True
+    else:
+        args.save_dir = args.env_name if args.save_dir == 'tmp' else args.save_dir
 
 
     args.clipped_value_loss = not args.no_clipped_value_loss
@@ -99,5 +103,6 @@ def get_args():
             else:
                 raise NotImplementedError('Unknown input')
         os.makedirs(args.save_dir)
-    
+        models_dir = os.path.join(args.save_dir, 'models')
+        os.makedirs(models_dir)
     return args

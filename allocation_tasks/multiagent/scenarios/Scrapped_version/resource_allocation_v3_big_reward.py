@@ -6,7 +6,9 @@ from allocation_tasks.multiagent.scenario import BaseScenario
 from scipy.optimize import linear_sum_assignment
 from allocation_tasks.multiagent.basic_knowledge import Knowledge, ScenarioConfig
 '''
-    相对v1版本,在单纯减少目标的数目以减少step长度的基础上, 只给予奖励且没有动作屏蔽 【统计完成目标的情况 + 统计成本】
+    相对v1版本, 单纯减少目标的数目以减少step长度, 同时进一步减少奖励以防止critic loss过大 【统计完成目标的情况 + 统计成本】
+    在上面基础上, 不光有最后的稀疏奖励(仅奖励),还有每一步的小惩罚+奖励
+    每个reward 不乘0.2
     需要泛化的维度有： 学习每个动作对于环境的影响 + 学习每种类型目标的需求 + 每个目标是随机选取的 + 每个目标是随机生成的
 '''
 
@@ -16,7 +18,7 @@ class Scenario(BaseScenario):
         self.num_agents = ScenarioConfig.num_agents
         self.knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
         self.joint_reward = 0
-        self.done_ratio = None
+        self.done_ratio = 0
 
     def make_world(self):
         world = World()
@@ -48,6 +50,7 @@ class Scenario(BaseScenario):
         world.done = False
         world.no_target2choose = False
         world.total_cost = 0
+        world.done_ratio = 0
 
         # 重置智能体状态
         for i, agent in enumerate(world.agents):
@@ -118,14 +121,15 @@ class Scenario(BaseScenario):
         single_reward = 0
         if world.done:
             self.done_ratio = np.sum(world.targets_done) / len(world.targets_done)
-            self.joint_reward += self.done_ratio * ScenarioConfig.total_reward
-            self.joint_reward -= world.total_cost
+            self.joint_reward += self.done_ratio * ScenarioConfig.total_reward * 0.01 
+            # self.joint_reward -= world.total_cost * 0.01 * 0.2
             # print("完成率为:{}".format(done_ratio))
             # print("总成本为:{}".format(world.total_cost))
             return self.joint_reward
         else:
             if world.single_reward > 0:
-                single_reward = world.single_reward * ScenarioConfig.single_target_reward
+                single_reward = world.single_reward * ScenarioConfig.single_target_reward * 0.01 
+                single_reward -= world.single_cost * 0.01 
             return single_reward
     
     
@@ -193,7 +197,7 @@ class Scenario(BaseScenario):
         '''
 
         return {'is_success': self.is_success, 'world_steps': world.steps,
-                'reward':self.joint_reward, 'total_cost': world.total_cost,'done_ratio': self.done_ratio,}
+                'reward':self.joint_reward, 'total_cost': world.total_cost,'done_ratio': world.done_ratio,}
     
 
 

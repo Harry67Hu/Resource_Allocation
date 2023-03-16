@@ -41,13 +41,16 @@ class Action(object):
             此处定义基地智能体的动作
             使用样例 e.g : state[t+1] = state[t] + agent.action.example 
             【方案一】在这个方案里面, 每个action在一步中只对一个目标产生作用
+            1. 第一个为空动作
+            2. 另外N个动作选择为: 第n号动作对应选取 n//self.max_num_plane的飞机种类进行选取
+            3. 具体选取 n%self.max_num_plane + 1架飞机
             
             0. 如果智能体在一步内对某个目标进行决策，则其离散动作数目为 (max_num_plane + 1)^num_plane_type 这是不可接受的！
-            TODO  半马尔科夫模型？？？ 【即智能体在多步对一个目标决策后，目标的状态才进行变化？？】
-            1. 智能体的动作为选定特定类型的飞机并决定多少架 + 空动作 num_plane_type * (max_num_plane + 1) + 1空动作
-            2. 分配资源的形式为 len = num_plane_type  e.g. 0号动作为 real_act = [0,0,0,0,0,0,0,0,0,0,0,0]   act act = 29号动作为 real_act = [2,0,0,0,0,0,0,0,0,0,0,0] 30号动作为[3,0,0,0,0,0,0,0,0,0,0,0]
-            3. 对智能体的影响为 agent_state -= real_act
-            4. 对目标的影响需要根据飞机的载荷实际计算目标的减少需求
+                TODO  半马尔科夫模型？？？ 【即智能体在多步对一个目标决策后，目标的状态才进行变化？？】
+                1. 智能体的动作为选定特定类型的飞机并决定多少架 + 空动作 num_plane_type * (max_num_plane + 1) + 1空动作
+                2. 分配资源的形式为 len = num_plane_type  e.g. 0号动作为 real_act = [0,0,0,0,0,0,0,0,0,0,0,0]   act act = 29号动作为 real_act = [2,0,0,0,0,0,0,0,0,0,0,0] 30号动作为[3,0,0,0,0,0,0,0,0,0,0,0]
+                3. 对智能体的影响为 agent_state -= real_act
+                4. 对目标的影响需要根据飞机的载荷实际计算目标的减少需求
         '''
         self.num_plane_type = num_plane_type
         self.max_num_plane = max_num_plane
@@ -74,6 +77,22 @@ class Action(object):
             num = real_act[i]
             resource_output += num * PLANE_CAPACITY[i]
         return resource_output
+    # 动作屏蔽,根据机场当前的状态输出动作
+    # 动作屏蔽初版，比较粗暴
+    def available_actions(self, agent):
+        knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
+        REAL_PLANE = knowledge.get_plane_type()
+        agent_thres = knowledge.get_agent_thres(agent.index) # 全部-最高阈值 = 最低阈值，低于此值即不能再做相应动作
+        agent_state = agent.state.real_planes
+        agent_remain = np.where(agent_state < agent_thres, 0, 1) # 基地中当前真飞机数目低于最低阈值, 则相应位置0,不能再做动作
+        mount_remain = np.zeros(ScenarioConfig.num_plane_type)
+        for i, m in enumerate(mount_remain):
+            mount2real_type = REAL_PLANE[i]
+            if agent_remain[mount2real_type] == 0:
+                m = 0
+        expand_mount_remain = np.repeat(mount_remain, ScenarioConfig.max_num_plane)
+        avai_action = np.insert(expand_mount_remain, 0, 1)
+        return avai_action
 
 
 # Entity Model
@@ -199,7 +218,7 @@ class World(object):
 
     def integrate_state(self):
         knowledge = Knowledge(num_requirement_type=ScenarioConfig.num_requirement_type, num_plane_type=ScenarioConfig.num_plane_type, num_target_type=ScenarioConfig.num_target_type)
-            
+        
         # test
         test = []
         test_req = []
@@ -210,6 +229,7 @@ class World(object):
         # 加载智能体动作对基地的影响(对基地智能体中的实际飞机数目有影响)
         for i, agent in enumerate(self.agents):
             real_act = agent.action.act2real()
+            aaa = agent.action.available_actions(agent)
             for j in range(len(real_act)):
                 plane_num  = real_act[j]
                 if plane_num > 0:

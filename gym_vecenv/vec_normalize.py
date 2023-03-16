@@ -81,7 +81,7 @@ class MultiAgentVecNormalize(VecEnvWrapper):
             obs = np.reshape(obs,(self.num_envs,self.n,-1))
             for j in range(self.n):
                 self.ob_rms[j].update(obs[:,j])
-                t = np.clip((np.array(list(obs[:,j]),dtype=np.float) - self.ob_rms[j].mean) / np.sqrt(self.ob_rms[j].var + self.epsilon), -self.clipob, self.clipob)
+                t = np.clip((np.array(list(obs[:,j]),dtype=float) - self.ob_rms[j].mean) / np.sqrt(self.ob_rms[j].var + self.epsilon), -self.clipob, self.clipob)
                 t = np.reshape(t,(self.num_envs,-1))
                 for k in range(t.shape[0]):
                     obs[:,j][k] = t[k]

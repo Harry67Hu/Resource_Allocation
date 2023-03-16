@@ -65,7 +65,7 @@ def train(args, return_early=False):
             savedict = {'models': [agent.actor_critic.state_dict() for agent in master.all_agents]}
             ob_rms = (None, None) if envs.ob_rms is None else (envs.ob_rms[0].mean, envs.ob_rms[0].var)
             savedict['ob_rms'] = ob_rms
-            savedir = args.save_dir+'/ep'+str(j)+'.pt'
+            savedir = args.save_dir+'/models'+'/ep'+str(j)+'.pt'
             torch.save(savedict, savedir)
 
         total_num_steps = (j + 1) * args.num_processes * args.num_steps
@@ -149,7 +149,7 @@ def train(args, return_early=False):
                 savedict = {'models': [agent.actor_critic.state_dict() for agent in master.all_agents]}
                 ob_rms = (None, None) if envs.ob_rms is None else (envs.ob_rms[0].mean, envs.ob_rms[0].var)
                 savedict['ob_rms'] = ob_rms
-                savedir = args.save_dir+'/ep'+str(j)+'.pt'
+                savedir = args.save_dir+'/models'+'/ep'+str(j)+'.pt'
                 torch.save(savedict, savedir)
                 print('===========================================================================================\n')
                 print('{} agents: training complete. Breaking.\n'.format(args.num_agents))
